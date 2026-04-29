@@ -1,0 +1,2 @@
+# digital_marketing_campaign_predictor
+This project improves digital marketing campaigns by predicting customer conversions using machine learning. It analyzes demographic and engagement data to identify likely converters, enabling better targeting, higher conversion rates, and improved return on ad spend (ROAS).
