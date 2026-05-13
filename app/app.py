@@ -17,7 +17,7 @@ Features
 
 Run Command
 -----------
-streamlit run app.py
+streamlit run app/app.py
 """
 
 # ============================================
@@ -28,13 +28,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.metrics import (
+
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
     roc_auc_score,
+
     confusion_matrix,
     classification_report
 )
@@ -72,11 +79,11 @@ def load_data():
 
         BASE_DIR /
 
-        "data/processed/processed_data_s.csv"
+        "data/processed/processed_data.csv"
     )
 
     # 🔥 CHANGE THIS ONLY IF
-    # processed dataset filename changes
+    # your processed dataset filename changes
 
     df = pd.read_csv(DATA_PATH)
 
@@ -94,11 +101,11 @@ def load_model():
 
         BASE_DIR /
 
-        "models/final_ensemble_model_s.pkl"
+        "models/final_model.pkl"
     )
 
     # 🔥 CHANGE THIS ONLY IF
-    # model filename changes
+    # your model filename changes
 
     model = joblib.load(MODEL_PATH)
 
@@ -112,6 +119,18 @@ def load_model():
 df = load_data()
 
 model = load_model()
+
+
+# ============================================
+# GLOBAL FEATURES/TARGET
+# ============================================
+
+X = df.drop(
+    "Conversion",
+    axis=1
+)
+
+y = df["Conversion"]
 
 
 # ============================================
@@ -189,10 +208,6 @@ elif page == "Business Insights":
 
     st.markdown("---")
 
-    # ============================================
-    # CONVERSION RATE
-    # ============================================
-
     conversion_rate = (
         df["Conversion"].mean() * 100
     )
@@ -205,7 +220,7 @@ elif page == "Business Insights":
     st.markdown("---")
 
     # ============================================
-    # TOP FEATURES
+    # TOP CORRELATED FEATURES
     # ============================================
 
     st.subheader("Top Correlated Features")
@@ -234,10 +249,10 @@ elif page == "Business Insights":
     st.markdown("---")
 
     # ============================================
-    # HIGH VALUE SEGMENTS
+    # INCOME VS CONVERSION
     # ============================================
 
-    st.subheader("High Value Customer Segments")
+    st.subheader("Income Distribution by Conversion")
 
     fig, ax = plt.subplots(
         figsize=(8,5)
@@ -252,10 +267,6 @@ elif page == "Business Insights":
         y="Income",
 
         ax=ax
-    )
-
-    plt.title(
-        "Income Distribution by Conversion"
     )
 
     st.pyplot(fig)
@@ -323,11 +334,17 @@ elif page == "Visualizations":
 
     st.subheader("Feature Distribution")
 
+    selectable_features = [
+
+        col for col in df.columns
+        if col != "Conversion"
+    ]
+
     selected_feature = st.selectbox(
 
         "Select Feature",
 
-        df.columns[:-1]
+        selectable_features
     )
 
     fig, ax = plt.subplots(
@@ -356,13 +373,6 @@ elif page == "Model Evaluation":
 
     st.markdown("---")
 
-    X = df.drop(
-        "Conversion",
-        axis=1
-    )
-
-    y = df["Conversion"]
-
     y_prob = model.predict_proba(X)[:,1]
 
     threshold = st.slider(
@@ -382,14 +392,6 @@ elif page == "Model Evaluation":
     # ============================================
     # METRICS
     # ============================================
-
-    from sklearn.metrics import (
-
-        accuracy_score,
-        precision_score,
-        recall_score,
-        f1_score
-    )
 
     accuracy = accuracy_score(
         y,
@@ -576,32 +578,54 @@ elif page == "Prediction System":
     if st.button("Predict Conversion"):
 
         # ============================================
-        # CREATE INPUT DATAFRAME
+        # CREATE SAMPLE INPUT
         # ============================================
 
         sample = X.iloc[0:1].copy()
 
-        sample["Age"] = age
-        sample["Income"] = income
-        sample["AdSpend"] = ad_spend
-        sample["WebsiteVisits"] = website_visits
-        sample["PagesPerVisit"] = pages_per_visit
-        sample["TimeOnSite"] = time_on_site
-        sample["EmailClicks"] = email_clicks
-        sample["SocialShares"] = social_shares
-        sample["LoyaltyPoints"] = loyalty_points
+        # ============================================
+        # UPDATE FEATURES
+        # ============================================
+
+        if "Age" in sample.columns:
+            sample["Age"] = age
+
+        if "Income" in sample.columns:
+            sample["Income"] = income
+
+        if "AdSpend" in sample.columns:
+            sample["AdSpend"] = ad_spend
+
+        if "WebsiteVisits" in sample.columns:
+            sample["WebsiteVisits"] = website_visits
+
+        if "PagesPerVisit" in sample.columns:
+            sample["PagesPerVisit"] = pages_per_visit
+
+        if "TimeOnSite" in sample.columns:
+            sample["TimeOnSite"] = time_on_site
+
+        if "EmailClicks" in sample.columns:
+            sample["EmailClicks"] = email_clicks
+
+        if "SocialShares" in sample.columns:
+            sample["SocialShares"] = social_shares
+
+        if "LoyaltyPoints" in sample.columns:
+            sample["LoyaltyPoints"] = loyalty_points
 
         # ============================================
-        # PREDICT
+        # PREDICTION
         # ============================================
 
         probability = (
+
             model.predict_proba(sample)[0][1]
         )
 
-        prediction = (
+        prediction = int(
             probability >= 0.5
-        ).astype(int)
+        )
 
         st.markdown("---")
 
