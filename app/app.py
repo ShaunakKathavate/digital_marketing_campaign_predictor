@@ -79,11 +79,11 @@ def load_data():
 
         BASE_DIR /
 
-        "data/processed/processed_data.csv"
+        "data/processed/processed_data_s.csv"
     )
 
     # 🔥 CHANGE THIS ONLY IF
-    # your processed dataset filename changes
+    # processed dataset filename changes
 
     df = pd.read_csv(DATA_PATH)
 
@@ -101,11 +101,11 @@ def load_model():
 
         BASE_DIR /
 
-        "models/final_model.pkl"
+        "models/final_ensemble_model_s.pkl"
     )
 
     # 🔥 CHANGE THIS ONLY IF
-    # your model filename changes
+    # model filename changes
 
     model = joblib.load(MODEL_PATH)
 
